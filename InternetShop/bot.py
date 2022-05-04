@@ -1,69 +1,69 @@
-import telebot
+import logging
+import sqlite3
 import config
 import random
 
-import botBridgeDatabase
+from aiogram import Bot, Dispatcher, executor, types
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.types import Message
 
-from telebot import types
+from create_bot import dp
+from create_bot import DataBase
+# DataBase = Database('db.db')
 
-bot = telebot.TeleBot(config.TOKEN)
+conn = sqlite3.connect('db.db')
+cur = conn.cursor()
 
+local_data = []
 
-@bot.message_handler(commands=['start'])
-def welcome(message):
-    sti = open('static/welcome.webp', 'rb')
-    bot.send_sticker(message.chat.id, sti)
+#  REGISTRATION!!!
 
-    # keyboard
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    item1 = types.KeyboardButton("🎲 Рандомное число")
-    item2 = types.KeyboardButton("😊 Как дела?")
+from handlers import registration
+registration.register_handlers_registration(dp)
 
-    markup.add(item1, item2)
+#  CUSTOMERS  DO!!!
 
-    bot.send_message(message.chat.id,
-                     "Добро пожаловать, {0.first_name}!\nЯ - <b>{1.first_name}</b>, бот созданный чтобы быть подопытным кроликом.".format(
-                         message.from_user, bot.get_me()),
-                     parse_mode='html', reply_markup=markup)
+from handlers import customer
+customer.register_handlers_customer(dp)
 
+#  SUPPLIERS DO!!!
 
-@bot.message_handler(content_types=['text'])
-def lalala(message):
-    if message.chat.type == 'private':
-        if message.text == '🎲 Рандомное число':
-            bot.send_message(message.chat.id, str(random.randint(0, 100)))
-        elif message.text == '😊 Как дела?':
+from handlers import supplier
+supplier.register_handlers_supplier(dp)
 
-            markup = types.InlineKeyboardMarkup(row_width=2)
-            item1 = types.InlineKeyboardButton("Хорошо", callback_data='good')
-            item2 = types.InlineKeyboardButton("Не очень", callback_data='bad')
+#  ADMINISTATORS DO!!!
 
-            markup.add(item1, item2)
+from handlers import administrator
+administrator.register_handlers_administrator(dp)
 
-            bot.send_message(message.chat.id, 'Отлично, сам как?', reply_markup=markup)
-        else:
-            bot.send_message(message.chat.id, 'Я не знаю что ответить 😢')
+#  FOR DEBUG!!!
 
 
-@bot.callback_query_handler(func=lambda call: True)
-def callback_inline(call):
-    try:
-        if call.message:
-            if call.data == 'good':
-                bot.send_message(call.message.chat.id, 'Вот и отличненько 😊')
-            elif call.data == 'bad':
-                bot.send_message(call.message.chat.id, 'Бывает 😢')
-
-            # remove inline buttons
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="😊 Как дела?",
-                                  reply_markup=None)
-
-            # show alert
-            bot.answer_callback_query(callback_query_id=call.id, show_alert=False,
-                                      text="ЭТО ТЕСТОВОЕ УВЕДОМЛЕНИЕ!!11")
-
-    except Exception as e:
-        print(repr(e))
+@dp.message_handler(commands=['test_goods'])
+async def test(message: Message, state: FSMContext):
+    await DataBase.print_test_goods()
+    await message.answer('ALL IS OK!')
 
 
-bot.polling(none_stop=True)
+@dp.message_handler(commands=['test_admins'])
+async def test_admins(message: Message, state: FSMContext):
+    await DataBase.print_test_admins()
+    await message.answer('ALL IS OK!')
+
+
+@dp.message_handler(commands=['test_suples'])
+async def test_suples(message: Message, state: FSMContext):
+    await DataBase.print_test_suples()
+    await message.answer('ALL IS OK!')
+
+
+@dp.message_handler(commands=['test_customs'])
+async def test_customs(message: Message, state: FSMContext):
+    await DataBase.print_test_customs()
+    await message.answer('ALL IS OK!')
+
+
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True)
