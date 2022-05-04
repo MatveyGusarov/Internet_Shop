@@ -10,57 +10,6 @@ from aiogram.types import Message
 conn = sqlite3.connect('db.db')
 cur = conn.cursor()
 
-cur.execute("""CREATE TABLE IF NOT EXISTS products(
-   id TEXT,
-   category TEXT,
-   name TEXT,
-   price TEXT,
-   description TEXT,
-   number_products BIGINT,
-   supplier TEXT,
-   id_supplier TEXT);
-""")
-conn.commit()
-
-cur.execute("""CREATE TABLE IF NOT EXISTS customers(
-   id TEXT,
-   name TEXT,
-   family TEXT,
-   type TEXT,
-   cash BIGINT,
-   basket TEXT);
-""")
-# type - freeze account or no  :  0 = not freeze and 1 = freeze
-# basket - корзина продуктов, которые сопоставлены пользователю, покупатель - товары,
-# которые он хочет купить, поставщие - товары, которые  он хочет поставить
-conn.commit()
-
-cur.execute("""CREATE TABLE IF NOT EXISTS suppliers(
-   id TEXT,
-   name TEXT,
-   family TEXT,
-   type TEXT,
-   cash BIGINT,
-   basket TEXT);
-""")
-conn.commit()
-
-cur.execute("""CREATE TABLE IF NOT EXISTS administrators(
-   id TEXT,
-   name TEXT,
-   family TEXT,
-   type TEXT);
-""")
-conn.commit()
-
-cur.execute("""CREATE TABLE IF NOT EXISTS purchase_history(
-    id_customs TEXT,
-    id_goods TEXT,
-    id_supplier TEXT,
-    price TEXT);
-""")
-conn.commit()
-
 
 class registration(StatesGroup):
     begin = State()
@@ -88,13 +37,11 @@ async def get_type(message: Message):
     elif message.text == 'supplier':
         local_data += ['supplier']
         username = message.from_user.username
-        cur.execute(f"CREATE TABLE IF NOT EXISTS {username}( category TEXT, name TEXT, price BIGINT);")
-        conn.commit()
+        await DataBase.create_new_account(username)
     elif message.text == 'customer':
         local_data += ['customer']
         username = message.from_user.username
-        cur.execute(f"CREATE TABLE IF NOT EXISTS {username}( category TEXT, name TEXT, price BIGINT);")
-        conn.commit()
+        await DataBase.create_new_account(username)
     else:
         await message.answer('Такого типа аккаунта не существует')
 

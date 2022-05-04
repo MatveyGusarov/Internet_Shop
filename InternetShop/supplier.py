@@ -8,9 +8,6 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import Message
 
-conn = sqlite3.connect('db.db')
-cur = conn.cursor()
-
 
 class deliver_product(StatesGroup):
     product_id = State()

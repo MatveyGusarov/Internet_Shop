@@ -11,10 +11,6 @@ from aiogram.types import Message
 
 from create_bot import dp
 from create_bot import DataBase
-# DataBase = Database('db.db')
-
-conn = sqlite3.connect('db.db')
-cur = conn.cursor()
 
 local_data = []
 
